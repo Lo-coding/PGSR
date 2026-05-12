@@ -61,3 +61,30 @@ The GT images were resized to the render resolution because the run used `-r2`.
 | **Mean** | **56.5** | **0.9294** | **33.3389** |
 
 LPIPS was not computed in this run because the WSL environment could not download the LPIPS `vgg.pth` weights from `raw.githubusercontent.com`. The helper script supports full SSIM/PSNR/LPIPS evaluation once the weight file is available; use `--skip_lpips` to reproduce the table above without LPIPS.
+
+## Eval Split Rerun
+
+Scenes 24, 37, and 40 were rerun with `--eval` and written to `output_dtu/dtu_scan*/eval`.
+This creates a true held-out test split for novel-view rendering. The command used `-r2`, so both train and test rendering are at half resolution.
+
+### Eval Geometry Metrics
+
+| Scan | Mean D2S | Mean S2D | Overall |
+| ---: | ---: | ---: | ---: |
+| 24 | 0.3128 | 0.3775 | 0.3452 |
+| 37 | 0.5792 | 0.5341 | 0.5566 |
+| 40 | 0.4115 | 0.3555 | 0.3835 |
+| **Mean** | **0.4345** | **0.4224** | **0.4284** |
+
+### Novel-View Rendering Metrics
+
+The metrics below use `eval/test/ours_30000/renders/*.png` and the corresponding `eval/test/ours_30000/gt/*.png`.
+
+| Scan | Test Images | SSIM | PSNR |
+| ---: | ---: | ---: | ---: |
+| 24 | 7 | 0.9256 | 24.2548 |
+| 37 | 7 | 0.9014 | 23.0943 |
+| 40 | 7 | 0.9063 | 24.4782 |
+| **Mean** | **7** | **0.9111** | **23.9424** |
+
+These novel-view PSNR values are much lower than the train-view values, which is expected because the model did not train on these held-out camera views.

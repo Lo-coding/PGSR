@@ -22,13 +22,17 @@ def load_rgb(path, size=None):
     return tf.to_tensor(image).unsqueeze(0).cuda()
 
 
-def evaluate_scene(scene_dir, data_root, lpips_model=None):
+def evaluate_scene(scene_dir, data_root, split="train", lpips_model=None):
     scene_dir = Path(scene_dir)
-    scan_id = scene_dir.name.replace("dtu_scan", "")
-    render_dir = scene_dir / "test" / "train" / "ours_30000" / "renders"
-    gt_dir = Path(data_root) / f"scan{scan_id}" / "images"
+    scan_name = scene_dir.name if scene_dir.name.startswith("dtu_scan") else scene_dir.parent.name
+    scan_id = scan_name.replace("dtu_scan", "")
+    render_dir = scene_dir / split / "ours_30000" / "renders"
+    if split == "test":
+        gt_dir = scene_dir / split / "ours_30000" / "gt"
+    else:
+        gt_dir = Path(data_root) / f"scan{scan_id}" / "images"
 
-    render_paths = sorted(render_dir.glob("*.jpg"))
+    render_paths = sorted(list(render_dir.glob("*.jpg")) + list(render_dir.glob("*.png")))
     if not render_paths:
         raise FileNotFoundError(f"No render images found in {render_dir}")
 
@@ -55,7 +59,7 @@ def evaluate_scene(scene_dir, data_root, lpips_model=None):
         "SSIM": float(torch.tensor(list(ssims.values())).mean().item()),
         "PSNR": float(torch.tensor(list(psnrs.values())).mean().item()),
         "num_images": len(render_paths),
-        "split": "train",
+        "split": split,
         "iteration": 30000,
     }
     if lpipss:
@@ -67,9 +71,9 @@ def evaluate_scene(scene_dir, data_root, lpips_model=None):
     if lpipss:
         per_view["LPIPS"] = lpipss
 
-    with (scene_dir / "test" / "render_metrics.json").open("w") as fp:
+    with (scene_dir / f"render_metrics_{split}.json").open("w") as fp:
         json.dump(summary, fp, indent=2)
-    with (scene_dir / "test" / "render_metrics_per_view.json").open("w") as fp:
+    with (scene_dir / f"render_metrics_{split}_per_view.json").open("w") as fp:
         json.dump(per_view, fp, indent=2)
 
     return scan_id, summary
@@ -79,6 +83,7 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("--scene_dirs", nargs="+", required=True)
     parser.add_argument("--data_root", default="data/dtu_dataset/dtu")
+    parser.add_argument("--split", default="train", choices=["train", "test"])
     parser.add_argument("--skip_lpips", action="store_true")
     args = parser.parse_args()
 
@@ -86,7 +91,7 @@ def main():
     lpips_model = None if args.skip_lpips else LPIPS(net_type="vgg").cuda()
     results = {}
     for scene_dir in args.scene_dirs:
-        scan_id, summary = evaluate_scene(scene_dir, args.data_root, lpips_model)
+        scan_id, summary = evaluate_scene(scene_dir, args.data_root, args.split, lpips_model)
         results[f"scan{scan_id}"] = summary
         print(f"scan{scan_id}: {summary}")
 
