@@ -2,7 +2,9 @@
 
 The DTU run in `output_dtu` completed on the standard 15 scenes:
 24, 37, 40, 55, 63, 65, 69, 83, 97, 105, 106, 110, 114, 118, and 122.
-The numbers below are read from each scene's `test/mesh/results.json`.
+The geometry numbers below are read from each scene's `test/mesh/results.json`.
+
+## Geometry Metrics
 
 | Scan | Mean D2S | Mean S2D | Overall |
 | ---: | ---: | ---: | ---: |
@@ -30,3 +32,32 @@ The numbers below are read from each scene's `test/mesh/results.json`.
 - scan63 is the second largest outlier at 0.7801, driven by a high D2S value.
 - The mean overall distance is higher than the README's reported PGSR Code_V1.0 mean of 0.47, but lower than the paper row mean of 0.53.
 
+## Rendering Metrics
+
+The original DTU run used `eval=False`, so the standard `metrics.py` test split had no images to evaluate. Rendering metrics were therefore computed on the existing train render outputs at iteration 30000, matching:
+
+- rendered images: `output_dtu/dtu_scan*/test/train/ours_30000/renders/*.jpg`
+- GT images: `data/dtu_dataset/dtu/scan*/images/*.png`
+
+The GT images were resized to the render resolution because the run used `-r2`.
+
+| Scan | Images | SSIM | PSNR |
+| ---: | ---: | ---: | ---: |
+| 24 | 49 | 0.9490 | 32.0608 |
+| 37 | 49 | 0.9446 | 27.5843 |
+| 40 | 49 | 0.9445 | 31.4730 |
+| 55 | 49 | 0.9253 | 33.3487 |
+| 63 | 49 | 0.9521 | 34.2074 |
+| 65 | 49 | 0.9195 | 33.1672 |
+| 69 | 49 | 0.9200 | 32.1264 |
+| 83 | 64 | 0.9095 | 32.9266 |
+| 97 | 64 | 0.9128 | 31.3316 |
+| 105 | 64 | 0.9168 | 33.9859 |
+| 106 | 64 | 0.9356 | 36.1473 |
+| 110 | 64 | 0.9251 | 34.7478 |
+| 114 | 64 | 0.9264 | 32.8084 |
+| 118 | 64 | 0.9326 | 37.3437 |
+| 122 | 64 | 0.9275 | 36.8250 |
+| **Mean** | **56.5** | **0.9294** | **33.3389** |
+
+LPIPS was not computed in this run because the WSL environment could not download the LPIPS `vgg.pth` weights from `raw.githubusercontent.com`. The helper script supports full SSIM/PSNR/LPIPS evaluation once the weight file is available; use `--skip_lpips` to reproduce the table above without LPIPS.
