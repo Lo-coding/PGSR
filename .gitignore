@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.DS_Store
+
+# Local datasets and generated experiment outputs.
+data/
+output/
+output_dtu/
+
+# Large model and reconstruction artifacts.
+*.pth
+*.ply
+
